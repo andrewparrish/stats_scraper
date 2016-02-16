@@ -1,16 +1,17 @@
+require 'bot'
+
 class NoPlayerFound < Exception; end
 
 # Super class to save basic player for all sports info
 class Player
-  attr_reader :bot
+  attr_reader :bot, :first_name, :last_name
 
-  def initialize(first_name, last_name, number, team)
-    @first_name = first_name
-    @last_name = last_name
-    @number = number
+  def initialize(first_name, last_name, team)
+    @first_name = first_name.downcase
+    @last_name = last_name.downcase
     @team = team
-    @bot = Bot.new(self.class)
-    @stats_page
+    @bot = Bot.new(self)
+    @stats_page = search_player
   end
 
   def handle_results
@@ -22,16 +23,21 @@ class Player
   end
 
   def name_match?(name_arr)
-    @first_name == name_arr[0] && @last_name == name_arr[1]
+    @first_name == name_arr[0].downcase && @last_name == name_arr[1].downcase
   end
 
-  def find
+  def search_player
+    raise NotImplementedError.new("#{self.class} hasn't implemented matches_player")
+  end
 
+  def get_player_page
+    @bot.go(@stats_page)
   end
 end
 
 class FootballPlayer < Player
-  def initialize(position)
+  def initialize(first_name, last_name, team, position)
+    super(first_name, last_name, team)
     @position = position
   end
 
@@ -47,10 +53,16 @@ class FootballPlayer < Player
     'No players found.'
   end
 
-  def handle_results
-    @bot.search("//span[@class='bodycontent']").map do |t|
+  def handle_results?
+    @bot.go_to_search_page("#{@last_name},#{@first_name}")
+    results_pages = @bot.search("//span[@class='bodycontent']").map do |t|
       t.children[0]['href']
     end
+    results_pages.each do |url|
+      @bot.go(url)
+      return true if matches_player?
+    end
+    false
   end
 
   def matches_player?
@@ -58,18 +70,12 @@ class FootballPlayer < Player
     name_match?(name)
   end
 
-  def self.search_player(query)
-    page = bot.get(base_search_url + query)
-    curr_url = page.uri.to_s
-    # First if this is a player stat page we're in the right place
-    if curr_urr =~ %r{players\/\d+}
-      return page
-      #Otherwise we need to see if there are multipe results, or no results
-    else
-      raise NoPlayerFound.new('Shit hapens') if page.body.include?('No players found.')
-      #Otherwise we need to return an array of results that were found.
-      return page.search("//span[@class='bodycontent']").map{|t| t.children[0]['href'] }
-    end
+  def search_query
+    @last_name
+  end
+
+  def search_player(query = nil)
+    @bot.get_player_page(query || search_query)
   end
 end
 

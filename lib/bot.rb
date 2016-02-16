@@ -5,11 +5,12 @@ class Bot
   attr_accessor :bot, :type
   attr_reader :curr_url, :curr_page, :base_url, :base_search_url
 
-  def initialize(type = Player)
+  def initialize(player)
     @bot = Mechanize.new
-    @type = type
-    @base_url = @type.base_url
-    @base_search_url = @type.base_search_url
+    @bot.follow_meta_refresh = true
+    @player = player
+    @base_url = @player.class.base_url
+    @base_search_url = @player.class.base_search_url
   end
 
   def go(url)
@@ -29,24 +30,28 @@ class Bot
     @curr_page.body.include?(query)
   end
 
-  def players_page?
-    case @type
+  def go_to_search_page(player_name)
+    go(@base_search_url + player_name)
+  end
+
+  def player_page?
+    case @player
     when FootballPlayer
-      url_contains?(%r{players\/\d+})
+      return url_contains?(%r{players\/\d+}) || false
     end
   end
 
   def player_found?(player_name)
-    go(@base_search_url + player_name)
-    players_page? || !page_contains?(@type.not_found_text)
+    go_to_search_page(player_name)
+    player_page? || !page_contains?(@player.class.not_found_text)
   end
 
-  def get_player(player_name)
+  def get_player_page(player_name)
     if player_found?(player_name)
       if player_page?
-
-      else
-
+        return @curr_url if @player.matches_player?
+      elsif @player.handle_results?
+        return @curr_url if @player.handle_results?
       end
     end
     raise NoPlayerFound.new("Player: #{player_name} could not be found.")
