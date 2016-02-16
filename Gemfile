@@ -1,9 +1,9 @@
 source 'https://rubygems.org'
 
-gem "mechanize"
+gem 'mechanize'
 
 group :development do
-	gem "pry"
+  gem 'pry'
 end
 # Specify your gem's dependencies in stats_scraper.gemspec
 gemspec
