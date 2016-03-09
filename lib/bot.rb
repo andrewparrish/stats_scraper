@@ -2,7 +2,7 @@ require 'mechanize'
 
 # Scraper
 class Bot
-  attr_accessor :bot, :type
+  attr_accessor :bot
   attr_reader :curr_url, :curr_page, :base_url, :base_search_url
 
   def initialize(player)
@@ -38,6 +38,8 @@ class Bot
     case @player
     when FootballPlayer
       return url_contains?(%r{players\/\d+}) || false
+    when BasketballPlayer
+      return url_contains?(%r{\/players\/}) || false
     end
   end
 
@@ -54,6 +56,6 @@ class Bot
         return @curr_url if @player.handle_results?
       end
     end
-    raise NoPlayerFound.new("Player: #{player_name} could not be found.")
+    raise(NoPlayerFound, "Player: #{player_name} could not be found.")
   end
 end

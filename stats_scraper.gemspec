@@ -2,6 +2,7 @@
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'stats_scraper/version'
+ROOT = File.dirname __dir__
 
 Gem::Specification.new do |spec|
   spec.name          = "stats_scraper"
