@@ -14,6 +14,6 @@ class Stats
   end
 
   def season_stats(year = Time.now.year)
-    scraper.parse_season_stats#[year]
+    scraper.parse_season_stats[year]
   end
 end

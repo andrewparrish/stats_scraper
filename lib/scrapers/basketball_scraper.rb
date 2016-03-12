@@ -22,7 +22,16 @@ class BasketballScraper < Scraper
     parsed_data
   end
 
-  def parse_row(data, headers)
-    Hash[headers.zip data.reject { |el| el.class == Nokogiri::XML::Text }]
+  def parse_row(data, head)
+    rows = data.reject { |el| el.class == Nokogiri::XML::Text }
+    rows_parsed = rows.map do |row|
+      if row.children[0].children[0]
+        row.children[0].children[0].text
+      else
+        row.children[0].text
+      end
+    end
+    data = head.zip(rows_parsed)
+    Hash[data]
   end
 end
